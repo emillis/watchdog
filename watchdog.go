@@ -2,7 +2,7 @@ package watchdog
 
 import "io/fs"
 
-var defaultWatchDog = WatchDog{
+var defaultWatchDog = watchDog{
 	Root:                 make([]string, 0, 5),
 	Depth:                0,
 	IgnoreStartupContent: false,
@@ -11,7 +11,7 @@ var defaultWatchDog = WatchDog{
 
 //===========[STRUCTS]====================================================================================================
 
-type WatchDog struct {
+type watchDog struct {
 	//Root folders to start monitoring
 	Root []string
 
@@ -26,8 +26,8 @@ type WatchDog struct {
 	Handler func(file fs.File)
 }
 
-func (w *WatchDog) copy() WatchDog {
-	nw := WatchDog{
+func (w *watchDog) copy() watchDog {
+	nw := watchDog{
 		Root:                 make([]string, len(w.Root), cap(w.Root)),
 		Depth:                w.Depth,
 		IgnoreStartupContent: w.IgnoreStartupContent,
@@ -41,7 +41,7 @@ func (w *WatchDog) copy() WatchDog {
 
 //===========[FUNCTIONALITY]====================================================================================================
 
-//NewWatchDog returns newly initiated WatchDog
-func NewWatchDog() WatchDog {
+//NewWatchDog returns newly initiated watchDog
+func NewWatchDog() watchDog {
 	return defaultWatchDog.copy()
 }
