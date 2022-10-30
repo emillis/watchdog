@@ -1,9 +1,12 @@
 package watchdog
 
-import "io/fs"
+import (
+	"io/fs"
+	"sync"
+)
 
 var defaultWatchDog = watchDog{
-	Root:                 make([]string, 0, 5),
+	root:                 make([]string, 0, 5),
 	Depth:                0,
 	IgnoreStartupContent: false,
 	Handler:              nil,
@@ -13,7 +16,7 @@ var defaultWatchDog = watchDog{
 
 type watchDog struct {
 	//Root folders to start monitoring
-	Root []string
+	root []string
 
 	//Depth allows you to limit depth of file monitoring in nested folders
 	Depth int
@@ -24,19 +27,44 @@ type watchDog struct {
 
 	//Handler will be invoked each time a change is detected withing the root folder
 	Handler func(file fs.File)
+
+	mx sync.RWMutex
 }
 
 func (w *watchDog) copy() watchDog {
+	w.mx.RLock()
+	defer w.mx.RUnlock()
+
 	nw := watchDog{
-		Root:                 make([]string, len(w.Root), cap(w.Root)),
+		root:                 make([]string, len(w.root), cap(w.root)),
 		Depth:                w.Depth,
 		IgnoreStartupContent: w.IgnoreStartupContent,
 		Handler:              w.Handler,
 	}
 
-	nw.Root = append(nw.Root, w.Root...)
+	nw.root = append(nw.root, w.root...)
 
 	return nw
+}
+
+func (w *watchDog) Root() []string {
+	w.mx.RLock()
+	defer w.mx.RUnlock()
+
+	r := make([]string, 0, len(w.root))
+
+	r = append(r, w.root...)
+
+	return r
+}
+
+func (w *watchDog) SetRoot(root []string) {
+	w.mx.Lock()
+	defer w.mx.Unlock()
+
+	w.root = make([]string, 0, len(root))
+
+	w.root = append(w.root, root...)
 }
 
 //===========[FUNCTIONALITY]====================================================================================================
