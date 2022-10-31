@@ -5,41 +5,46 @@ import (
 	"sync"
 )
 
-var defaultWatchDog = watchDog{
+//===========[STATIC]====================================================================================================
+
+//These are the default values for the WatchDog
+var defaultWatchDog = WatchDog{
 	root:                 make([]string, 0, 5),
-	Depth:                0,
-	IgnoreStartupContent: false,
-	Handler:              nil,
+	depth:                0,
+	ignoreStartupContent: false,
+	handler:              nil,
 }
 
 //===========[STRUCTS]====================================================================================================
 
-type watchDog struct {
+type WatchDog struct {
 	//Root folders to start monitoring
 	root []string
 
 	//Depth allows you to limit depth of file monitoring in nested folders
-	Depth int
+	depth int
 
-	//IgnoreStartupContent - if this is set to true, handler function will not fire during the initial indexing
+	//ignoreStartupContent - if this is set to true, handler function will not fire during the initial indexing
 	//of the root folder
-	IgnoreStartupContent bool
+	ignoreStartupContent bool
 
-	//Handler will be invoked each time a change is detected withing the root folder
-	Handler func(file fs.File)
+	//handler will be invoked each time a change is detected withing the root folder
+	handler func(file fs.File)
 
 	mx sync.RWMutex
 }
 
-func (w *watchDog) copy() watchDog {
+//copy makes a perfect copy of the WatchDog
+func (w *WatchDog) copy() WatchDog {
 	w.mx.RLock()
 	defer w.mx.RUnlock()
 
-	nw := watchDog{
+	nw := WatchDog{
 		root:                 make([]string, len(w.root), cap(w.root)),
-		Depth:                w.Depth,
-		IgnoreStartupContent: w.IgnoreStartupContent,
-		Handler:              w.Handler,
+		depth:                w.depth,
+		ignoreStartupContent: w.ignoreStartupContent,
+		handler:              w.handler,
+		mx:                   sync.RWMutex{},
 	}
 
 	nw.root = append(nw.root, w.root...)
@@ -47,7 +52,8 @@ func (w *watchDog) copy() watchDog {
 	return nw
 }
 
-func (w *watchDog) Root() []string {
+//Root returns the slice of root folders that the watchdog is monitoring
+func (w *WatchDog) Root() []string {
 	w.mx.RLock()
 	defer w.mx.RUnlock()
 
@@ -58,7 +64,8 @@ func (w *watchDog) Root() []string {
 	return r
 }
 
-func (w *watchDog) SetRoot(root []string) {
+//SetRoot sets a slice of root locations that the WatchDog is going to be monitoring
+func (w *WatchDog) SetRoot(root []string) {
 	w.mx.Lock()
 	defer w.mx.Unlock()
 
@@ -67,9 +74,51 @@ func (w *watchDog) SetRoot(root []string) {
 	w.root = append(w.root, root...)
 }
 
+//Depth returns the limit of folder depth starting from the root folder
+func (w *WatchDog) Depth() int {
+	w.mx.RLock()
+	defer w.mx.RUnlock()
+
+	return w.depth
+}
+
+//SetDepth sets a new limit of scanning depth starting with the root folder
+func (w *WatchDog) SetDepth(val int) {
+	w.mx.Lock()
+	defer w.mx.Unlock()
+
+	w.depth = val
+}
+
+//IgnoreStartupContent returns boolean which indicates whether the contents that are present within the root folder
+//during the initial scan of the locations should invoke the handler function
+func (w *WatchDog) IgnoreStartupContent() bool {
+	w.mx.RLock()
+	defer w.mx.RUnlock()
+
+	return w.ignoreStartupContent
+}
+
+//SetIgnoreStartupContent decides whether the files present in the root folder structure should invoke the handler
+//function during the initial scan of the locations
+func (w *WatchDog) SetIgnoreStartupContent(val bool) {
+	w.mx.Lock()
+	defer w.mx.Unlock()
+
+	w.ignoreStartupContent = val
+}
+
+//SetHandler sets new handler function
+func (w *WatchDog) SetHandler(h func(fs.File)) {
+	w.mx.Lock()
+	defer w.mx.Unlock()
+
+	w.handler = h
+}
+
 //===========[FUNCTIONALITY]====================================================================================================
 
-//NewWatchDog returns newly initiated watchDog
-func NewWatchDog() watchDog {
+//NewWatchDog returns newly initiated WatchDog
+func NewWatchDog() WatchDog {
 	return defaultWatchDog.copy()
 }
