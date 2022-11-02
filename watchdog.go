@@ -116,8 +116,13 @@ func (w *WatchDog) SetHandler(h func(fs.File)) {
 	w.handler = h
 }
 
-//StartWatching begins watching root directories
-func (w *WatchDog) StartWatching() {
+//Start begins watching root directories
+func (w *WatchDog) Start() {
+
+}
+
+//Stop stops watching the root directories
+func (w *WatchDog) Stop() {
 
 }
 
