@@ -8,11 +8,12 @@ import (
 //===========[STATIC]====================================================================================================
 
 //These are the default values for the WatchDog
-var defaultWatchDog = WatchDog{
-	root:                 make([]string, 0, 5),
-	depth:                0,
-	ignoreStartupContent: false,
-	handler:              nil,
+var defaultRequirements = &Requirements{
+	Root:                 make([]string, 0, 5),
+	Depth:                0,
+	IgnoreStartupContent: false,
+	ScanFrequency:        3000,
+	Handler:              nil,
 }
 
 //===========[STRUCTS]====================================================================================================
@@ -27,6 +28,9 @@ type WatchDog struct {
 	//ignoreStartupContent - if this is set to true, handler function will not fire during the initial indexing
 	//of the root folder
 	ignoreStartupContent bool
+
+	//How often to scan the root folders (ms)
+	scanFrequency uint32
 
 	//handler will be invoked each time a change is detected withing the root folder
 	handler func(file fs.File)
@@ -129,6 +133,36 @@ func (w *WatchDog) Stop() {
 //===========[FUNCTIONALITY]====================================================================================================
 
 //NewWatchDog returns newly initiated WatchDog
-func NewWatchDog() WatchDog {
-	return defaultWatchDog.copy()
+func NewWatchDog(req *Requirements) (*WatchDog, error) {
+	if req == nil {
+		req = defaultRequirements
+	}
+
+	if err := checkRequirements(req); err != nil {
+		return nil, err
+	}
+
+	wd := &WatchDog{
+		root:                 make([]string, cap(req.Root), len(req.Root)),
+		depth:                req.Depth,
+		ignoreStartupContent: req.IgnoreStartupContent,
+		scanFrequency:        req.ScanFrequency,
+		handler:              req.Handler,
+	}
+
+	wd.root = append(wd.root, req.Root...)
+
+	return wd, nil
+}
+
+//
+func checkRequirements(req *Requirements) error {
+	return nil
+}
+
+//
+func newWatcherRoutine(results chan fs.File, wd *WatchDog) {
+	go func() {
+
+	}()
 }
