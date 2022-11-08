@@ -87,11 +87,11 @@ func (w *WatchDog) Depth() int {
 }
 
 //SetDepth sets a new limit of scanning depth starting with the root folder
-func (w *WatchDog) SetDepth(val int) {
+func (w *WatchDog) SetDepth(val uint32) {
 	w.mx.Lock()
 	defer w.mx.Unlock()
 
-	w.depth = val
+	w.depth = int(val)
 }
 
 //IgnoreStartupContent returns boolean which indicates whether the contents that are present within the root folder
@@ -144,7 +144,7 @@ func NewWatchDog(req *Requirements) (*WatchDog, error) {
 
 	wd := &WatchDog{
 		root:                 make([]string, cap(req.Root), len(req.Root)),
-		depth:                req.Depth,
+		depth:                int(req.Depth),
 		ignoreStartupContent: req.IgnoreStartupContent,
 		scanFrequency:        req.ScanFrequency,
 		handler:              req.Handler,
