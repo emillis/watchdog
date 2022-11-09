@@ -2,7 +2,9 @@ package watchdog
 
 import (
 	"io/fs"
+	"path/filepath"
 	"sync"
+	"time"
 )
 
 //===========[STATIC]====================================================================================================
@@ -13,6 +15,7 @@ var defaultRequirements = &Requirements{
 	Depth:                0,
 	IgnoreStartupContent: false,
 	ScanFrequency:        3000,
+	OperatingMode:        Burst,
 	Handler:              nil,
 }
 
@@ -163,6 +166,19 @@ func checkRequirements(req *Requirements) error {
 //
 func newWatcherRoutine(results chan fs.File, wd *WatchDog) {
 	go func() {
+		root := wd.Root()
+		delay := time.Duration(wd.scanFrequency) //TODO: change this to method
 
+		for i := 0; i < len(root); i++ {
+			filepath.WalkDir(root[i], func(path string, d fs.DirEntry, err error) error {
+				if d.IsDir() {
+					return nil
+				}
+
+				return nil
+			})
+		}
+
+		time.Sleep(time.Millisecond * delay)
 	}()
 }

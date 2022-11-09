@@ -4,11 +4,15 @@ import "io/fs"
 
 //===========[STATIC]====================================================================================================
 
+//OperatingMode allows to choose different modes of operation of the WatchDog
 type OperatingMode string
 
 const (
+	//Sequential mode, Handler will be caller for each new file
 	Sequential OperatingMode = "sequential"
-	Burst      OperatingMode = "burst"
+	//Burst mode, Handler will be called every ScanFrequency amount of time with the files being accumulated
+	//until that time
+	Burst OperatingMode = "burst"
 )
 
 //===========[STRUCTS]====================================================================================================
@@ -26,6 +30,7 @@ type Requirements struct {
 	//How often to scan the root folders (ms)
 	ScanFrequency uint32
 
+	//OperatingMode allows to choose different modes of operation of the WatchDog
 	OperatingMode OperatingMode
 
 	//This function will get invoked for each file detected
