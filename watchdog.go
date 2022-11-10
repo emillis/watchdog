@@ -38,6 +38,8 @@ type WatchDog struct {
 	//handler will be invoked each time a change is detected withing the root folder
 	handler func(file fs.File)
 
+	stopChan chan struct{}
+
 	mx sync.RWMutex
 }
 
@@ -151,6 +153,8 @@ func NewWatchDog(req *Requirements) (*WatchDog, error) {
 		ignoreStartupContent: req.IgnoreStartupContent,
 		scanFrequency:        req.ScanFrequency,
 		handler:              req.Handler,
+		stopChan:             make(chan struct{}),
+		mx:                   sync.RWMutex{},
 	}
 
 	wd.root = append(wd.root, req.Root...)
@@ -169,16 +173,23 @@ func newWatcherRoutine(results chan fs.File, wd *WatchDog) {
 		root := wd.Root()
 		delay := time.Duration(wd.scanFrequency) //TODO: change this to method
 
-		for i := 0; i < len(root); i++ {
-			filepath.WalkDir(root[i], func(path string, d fs.DirEntry, err error) error {
-				if d.IsDir() {
+		for {
+			switch {
+			case <-wd.stopChan:
+
+			}
+
+			for i := 0; i < len(root); i++ {
+				filepath.WalkDir(root[i], func(path string, d fs.DirEntry, err error) error {
+					if d.IsDir() {
+						return nil
+					}
+
 					return nil
-				}
+				})
+			}
 
-				return nil
-			})
+			time.Sleep(time.Millisecond * delay)
 		}
-
-		time.Sleep(time.Millisecond * delay)
 	}()
 }
