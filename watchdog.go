@@ -174,22 +174,20 @@ func newWatcherRoutine(results chan fs.File, wd *WatchDog) {
 		delay := time.Duration(wd.scanFrequency) //TODO: change this to method
 
 		for {
-			switch {
+			select {
 			case <-wd.stopChan:
+				break
+			case <-time.After(delay):
+				for i := 0; i < len(root); i++ {
+					filepath.WalkDir(root[i], func(path string, d fs.DirEntry, err error) error {
+						if d.IsDir() {
+							return nil
+						}
 
-			}
-
-			for i := 0; i < len(root); i++ {
-				filepath.WalkDir(root[i], func(path string, d fs.DirEntry, err error) error {
-					if d.IsDir() {
 						return nil
-					}
-
-					return nil
-				})
+					})
+				}
 			}
-
-			time.Sleep(time.Millisecond * delay)
 		}
 	}()
 }
