@@ -36,7 +36,7 @@ type WatchDog struct {
 	scanFrequency uint32
 
 	//handler will be invoked each time a change is detected withing the root folder
-	handler func(file fs.File)
+	handler func(fs.FileInfo)
 
 	stopChan chan struct{}
 
@@ -118,7 +118,7 @@ func (w *WatchDog) SetIgnoreStartupContent(val bool) {
 }
 
 //SetHandler sets new handler function
-func (w *WatchDog) SetHandler(h func(fs.File)) {
+func (w *WatchDog) SetHandler(h func(fs.FileInfo)) {
 	w.mx.Lock()
 	defer w.mx.Unlock()
 
@@ -183,6 +183,13 @@ func newWatcherRoutine(results chan fs.File, wd *WatchDog) {
 						if d.IsDir() {
 							return nil
 						}
+
+						fi, err := d.Info()
+						if err != nil {
+							return nil
+						}
+
+						wd.handler(fi)
 
 						return nil
 					})

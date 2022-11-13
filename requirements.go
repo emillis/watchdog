@@ -34,5 +34,5 @@ type Requirements struct {
 	OperatingMode OperatingMode
 
 	//This function will get invoked for each file detected
-	Handler func(fs.File)
+	Handler func(fs.FileInfo)
 }
